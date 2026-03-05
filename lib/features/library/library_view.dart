@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:mangaflow/data/mock/mock_mangas.dart';
+import 'package:mangaflow/features/library/mangaDetail_view.dart';
 
 class LibraryView extends StatelessWidget {
   const LibraryView({super.key});
@@ -17,15 +18,25 @@ class LibraryView extends StatelessWidget {
       ),
       itemBuilder: (BuildContext context, int index) {
         final manga = mockMangaList[index];
-        return Container(
-          decoration: BoxDecoration(
-            borderRadius: BorderRadius.circular(12),
+        return GestureDetector(
+          onTap: () {
+            Navigator.push(
+              context,
+              MaterialPageRoute(
+                builder: (context) => MangadetailView(manga: manga),
+              ),
+            );
+          },
+          child: Container(
+            decoration: BoxDecoration(
+              borderRadius: BorderRadius.circular(12),
 
-            boxShadow: [BoxShadow(color: Colors.black12)],
-          ),
-          child: ClipRRect(
-            borderRadius: BorderRadius.circular(12),
-            child: Image.network(manga.coverUrl, fit: BoxFit.cover),
+              boxShadow: [BoxShadow(color: Colors.black12)],
+            ),
+            child: ClipRRect(
+              borderRadius: BorderRadius.circular(12),
+              child: Image.network(manga.coverUrl, fit: BoxFit.cover),
+            ),
           ),
         );
       },
