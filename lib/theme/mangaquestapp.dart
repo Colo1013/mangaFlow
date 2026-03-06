@@ -1,8 +1,11 @@
 import 'package:flutter/material.dart';
+import 'package:mangaflow/main.dart';
 import "app_sizes.dart";
 
 class Mangaquestapp extends StatelessWidget {
-  const Mangaquestapp({super.key});
+  final Widget home;
+
+  const Mangaquestapp({super.key, required this.home});
 
   @override
   Widget build(BuildContext context) {
@@ -39,7 +42,7 @@ class Mangaquestapp extends StatelessWidget {
         ],
       ),
       themeMode: ThemeMode.system,
-      home: Mangaquestapp(),
+      home: home,
     );
   }
 }

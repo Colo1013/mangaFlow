@@ -10,7 +10,7 @@ import 'package:mangaflow/theme/mangaquestapp.dart';
 final bottomNavIndexProvider = StateProvider<int>((ref) => 0);
 
 void main() {
-  runApp(const ProviderScope(child: Mangaquestapp()));
+  runApp(const ProviderScope(child: Mangaquestapp(home: MyWidget())));
 }
 
 class MyWidget extends ConsumerWidget {

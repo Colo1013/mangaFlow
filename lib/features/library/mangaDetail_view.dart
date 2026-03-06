@@ -22,7 +22,7 @@ class MangadetailView extends ConsumerWidget {
             crossAxisAlignment: CrossAxisAlignment.center,
             children: [
               ClipRRect(
-                borderRadius: BorderRadiusGeometry.circular(12.0),
+                borderRadius: BorderRadius.circular(12.0),
                 child: Image.network(manga.coverUrl, fit: BoxFit.cover),
               ),
               const SizedBox(height: 8),
