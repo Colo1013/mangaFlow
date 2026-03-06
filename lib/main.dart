@@ -4,10 +4,13 @@ import 'package:mangaflow/features/focus_dojo/focusdojo_view.dart';
 import 'package:mangaflow/features/library/library_view.dart';
 import 'package:mangaflow/features/profile/profile_view.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:mangaflow/theme/app_sizes.dart';
+import 'package:mangaflow/theme/mangaquestapp.dart';
 
 final bottomNavIndexProvider = StateProvider<int>((ref) => 0);
+
 void main() {
-  runApp(const ProviderScope(child: MaterialApp(home: MyWidget())));
+  runApp(const ProviderScope(child: Mangaquestapp()));
 }
 
 class MyWidget extends ConsumerWidget {
@@ -38,41 +41,6 @@ class MyWidget extends ConsumerWidget {
         currentIndex: indiceAttuale,
         onTap: (int nuovoIndice) {
           ref.read(bottomNavIndexProvider.notifier).state = nuovoIndice;
-        },
-      ),
-    );
-  }
-}
-
-class _MyWidgetState extends State<MyWidget> {
-  int indiceAttuale = 0;
-  List<Widget> schermate = [LibraryView(), FocusdojoView(), ProfileView()];
-
-  @override
-  Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(title: Text("MangaFlow App")),
-      body: schermate[indiceAttuale],
-      bottomNavigationBar: BottomNavigationBar(
-        items: [
-          BottomNavigationBarItem(
-            icon: Icon(Icons.book, color: Colors.blueAccent),
-            label: "Libreria",
-          ),
-          BottomNavigationBarItem(
-            icon: Icon(Icons.auto_stories, color: Colors.amber),
-            label: "Concentrazione",
-          ),
-          BottomNavigationBarItem(
-            icon: Icon(Icons.person, color: Colors.deepPurple),
-            label: "Profilo",
-          ),
-        ],
-        currentIndex: indiceAttuale,
-        onTap: (int nuovoIndice) {
-          setState(() {
-            indiceAttuale = nuovoIndice;
-          });
         },
       ),
     );
