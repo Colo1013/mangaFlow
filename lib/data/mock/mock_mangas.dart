@@ -10,7 +10,7 @@ final List<Manga> mockMangaList = [
     currentVolume: 15,
   ),
   Manga(
-    id: 'm_001',
+    id: 'm_005',
     title: 'Berserk',
     coverUrl:
         'https://upload.wikimedia.org/wikipedia/it/5/55/Berserk_60_1ed.jpg',
