@@ -21,7 +21,7 @@ class Manga {
     String? coverUrl,
     int? currentVolume,
     int? totalVolume,
-    bool? isFavourite,
+    bool? isFavorite,
   }) {
     return Manga(
       id: id ?? this.id,
@@ -29,7 +29,7 @@ class Manga {
       coverUrl: coverUrl ?? this.coverUrl,
       totalVolume: totalVolume ?? this.totalVolume,
       currentVolume: currentVolume ?? this.currentVolume,
-      isFavorite: isFavourite ?? isFavorite,
+      isFavorite: isFavorite ?? this.isFavorite,
     );
   }
 }

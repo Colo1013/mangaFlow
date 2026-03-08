@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:mangaflow/core/widgets/apple_button.dart';
 import 'package:mangaflow/features/library/providers/mangalistnotifier.dart';
-import 'package:mangaflow/features/library/widgets/manga_cover_card.dart';
 import '../../data/models/manga.dart';
 
 class MangaDetailView extends ConsumerWidget {
@@ -12,7 +11,6 @@ class MangaDetailView extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    // 🔥 OTTIMIZZAZIONE: Osserviamo solo le modifiche a QUESTO specifico manga
     final Manga mangaAggiornato = ref.watch(
       mangaListProvider.select(
         (lista) =>
@@ -46,12 +44,7 @@ class MangaDetailView extends ConsumerWidget {
         padding: const EdgeInsets.symmetric(horizontal: 24.0, vertical: 16.0),
         child: Column(
           children: [
-            MangaCoverCard(
-              manga: mangaAggiornato,
-              style: MangaCoverStyle.detail,
-              width: 220,
-              height: 330,
-            ),
+            _CoverImage(coverUrl: mangaAggiornato.coverUrl),
             const SizedBox(height: 24),
             Text(
               mangaAggiornato.title,
@@ -78,6 +71,38 @@ class MangaDetailView extends ConsumerWidget {
               },
             ),
           ],
+        ),
+      ),
+    );
+  }
+}
+
+class _CoverImage extends StatelessWidget {
+  final String coverUrl;
+
+  const _CoverImage({required this.coverUrl});
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      decoration: BoxDecoration(
+        borderRadius: BorderRadius.circular(20),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withValues(alpha: 0.15),
+            blurRadius: 24,
+            offset: const Offset(0, 12),
+            spreadRadius: -4,
+          ),
+        ],
+      ),
+      child: ClipRRect(
+        borderRadius: BorderRadius.circular(20),
+        child: Image.network(
+          coverUrl,
+          width: 220,
+          height: 330,
+          fit: BoxFit.cover,
         ),
       ),
     );

@@ -20,7 +20,7 @@ class MangaListNotifier extends Notifier<List<Manga>> {
   void aggiungiPreferiti(String mangaId) {
     state = [
       for (Manga m in state)
-        m.id == mangaId ? m.copyWith(isFavourite: m.isFavorite ^ true) : m,
+        m.id == mangaId ? m.copyWith(isFavorite: m.isFavorite ^ true) : m,
     ];
   }
 }
