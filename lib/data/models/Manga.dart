@@ -32,4 +32,26 @@ class Manga {
       isFavorite: isFavorite ?? this.isFavorite,
     );
   }
+
+  Map<String, dynamic> toMap() {
+    return <String, dynamic>{
+      "id": this.id,
+      "title": this.title,
+      "coverUrl": this.coverUrl,
+      "totalVolume": this.totalVolume,
+      "currentVolume": this.currentVolume,
+      "isFavorite": this.isFavorite == false ? 0 : 1,
+    };
+  }
+
+  factory Manga.fromMap(Map<String, dynamic> map) {
+    return Manga(
+      id: map["id"],
+      title: map["title"],
+      coverUrl: map["coverUrl"],
+      totalVolume: map["totalVolume"],
+      currentVolume: map["currentVolume"],
+      isFavorite: map["isFavorite"] == 0 ? false : true,
+    );
+  }
 }
