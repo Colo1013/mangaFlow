@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:mangaflow/main.dart';
 import "app_sizes.dart";
 
 class Mangaquestapp extends StatelessWidget {

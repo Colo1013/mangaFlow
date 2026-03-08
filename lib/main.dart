@@ -1,47 +1,100 @@
+import 'dart:ui' as ui;
 import 'package:flutter/material.dart';
-import 'package:flutter_riverpod/legacy.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:mangaflow/features/focus_dojo/focusdojo_view.dart';
 import 'package:mangaflow/features/library/library_view.dart';
 import 'package:mangaflow/features/profile/profile_view.dart';
-import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:mangaflow/theme/app_sizes.dart';
 import 'package:mangaflow/theme/mangaquestapp.dart';
-
-final bottomNavIndexProvider = StateProvider<int>((ref) => 0);
+import 'package:mangaflow/features/library/providers/bottomnavindiexnotifier.dart';
+// 1. Creiamo un Notifier per gestire l'indice della BottomNav
 
 void main() {
-  runApp(const ProviderScope(child: Mangaquestapp(home: MyWidget())));
+  runApp(const ProviderScope(child: Mangaquestapp(home: MainAppView())));
 }
 
-class MyWidget extends ConsumerWidget {
-  const MyWidget({super.key});
+class MainAppView extends ConsumerWidget {
+  const MainAppView({super.key});
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    List<Widget> schermate = [LibraryView(), FocusdojoView(), ProfileView()];
-    int indiceAttuale = ref.watch(bottomNavIndexProvider);
+    const List<Widget> screens = [
+      LibraryView(),
+      FocusdojoView(),
+      ProfileView(),
+    ];
+
+    final int currentIndex = ref.watch(bottomNavIndexProvider);
+
     return Scaffold(
-      appBar: AppBar(title: Text("MangaFlow App")),
-      body: schermate[indiceAttuale],
-      bottomNavigationBar: BottomNavigationBar(
-        items: [
-          BottomNavigationBarItem(
-            icon: Icon(Icons.book, color: Colors.blueAccent),
-            label: "Libreria",
+      extendBody: true, // Necessario per il blured background della navbar
+      appBar: AppBar(
+        title: const Text(
+          "MangaFlow",
+          style: TextStyle(fontWeight: FontWeight.bold),
+        ),
+        centerTitle: true,
+        elevation: 0,
+      ),
+      body: screens[currentIndex],
+      bottomNavigationBar: _GlassBottomNav(
+        currentIndex: currentIndex,
+        onTap: (index) =>
+            ref.read(bottomNavIndexProvider.notifier).setIndex(index),
+      ),
+    );
+  }
+}
+
+class _GlassBottomNav extends StatelessWidget {
+  final int currentIndex;
+  final ValueChanged<int> onTap;
+
+  const _GlassBottomNav({required this.currentIndex, required this.onTap});
+
+  @override
+  Widget build(BuildContext context) {
+    return ClipRRect(
+      child: BackdropFilter(
+        filter: ui.ImageFilter.blur(sigmaX: 10, sigmaY: 10),
+        child: Container(
+          decoration: BoxDecoration(
+            color: Theme.of(
+              context,
+            ).scaffoldBackgroundColor.withValues(alpha: 0.8),
+            border: Border(
+              top: BorderSide(
+                color: Theme.of(context).dividerColor.withValues(alpha: 0.2),
+                width: 0.5,
+              ),
+            ),
           ),
-          BottomNavigationBarItem(
-            icon: Icon(Icons.auto_stories, color: Colors.amber),
-            label: "Concentrazione",
+          child: BottomNavigationBar(
+            backgroundColor:
+                Colors.transparent, // Sfondo gestito dal Container sopra
+            elevation: 0,
+            selectedItemColor: Theme.of(context).primaryColor,
+            unselectedItemColor: Colors.grey,
+            showSelectedLabels: true,
+            showUnselectedLabels: true,
+            type: BottomNavigationBarType.fixed,
+            items: const [
+              BottomNavigationBarItem(
+                icon: Icon(Icons.menu_book_rounded),
+                label: "Libreria",
+              ),
+              BottomNavigationBarItem(
+                icon: Icon(Icons.auto_stories_rounded),
+                label: "Dojo",
+              ),
+              BottomNavigationBarItem(
+                icon: Icon(Icons.person_rounded),
+                label: "Profilo",
+              ),
+            ],
+            currentIndex: currentIndex,
+            onTap: onTap,
           ),
-          BottomNavigationBarItem(
-            icon: Icon(Icons.person, color: Colors.deepPurple),
-            label: "Profilo",
-          ),
-        ],
-        currentIndex: indiceAttuale,
-        onTap: (int nuovoIndice) {
-          ref.read(bottomNavIndexProvider.notifier).state = nuovoIndice;
-        },
+        ),
       ),
     );
   }

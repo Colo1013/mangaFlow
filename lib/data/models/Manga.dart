@@ -2,9 +2,9 @@ class Manga {
   final String id;
   final String title;
   final String coverUrl;
-
   final int currentVolume;
   final int totalVolume;
+  final bool isFavorite;
 
   Manga({
     required this.id,
@@ -12,6 +12,7 @@ class Manga {
     required this.coverUrl,
     required this.totalVolume,
     this.currentVolume = 0,
+    this.isFavorite = false,
   });
 
   Manga copyWith({
@@ -20,6 +21,7 @@ class Manga {
     String? coverUrl,
     int? currentVolume,
     int? totalVolume,
+    bool? isFavourite,
   }) {
     return Manga(
       id: id ?? this.id,
@@ -27,6 +29,7 @@ class Manga {
       coverUrl: coverUrl ?? this.coverUrl,
       totalVolume: totalVolume ?? this.totalVolume,
       currentVolume: currentVolume ?? this.currentVolume,
+      isFavorite: isFavourite ?? isFavorite,
     );
   }
 }

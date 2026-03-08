@@ -16,6 +16,13 @@ class MangaListNotifier extends Notifier<List<Manga>> {
             : m,
     ];
   }
+
+  void aggiungiPreferiti(String mangaId) {
+    state = [
+      for (Manga m in state)
+        m.id == mangaId ? m.copyWith(isFavourite: m.isFavorite ^ true) : m,
+    ];
+  }
 }
 
 final mangaListProvider = NotifierProvider<MangaListNotifier, List<Manga>>(() {

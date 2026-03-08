@@ -39,11 +39,11 @@ class AppSizeExtension extends ThemeExtension<AppSizeExtension> {
       return this;
     }
     return AppSizeExtension(
-      small: lerpDouble(this.small, other.small, t)!,
-      medium: lerpDouble(this.medium, other.medium, t)!,
-      big: lerpDouble(this.big, other.big, t)!,
-      smallradius: lerpDouble(this.smallradius, other.smallradius, t)!,
-      bigradius: lerpDouble(this.bigradius, other.bigradius, t)!,
+      small: lerpDouble(small, other.small, t)!,
+      medium: lerpDouble(medium, other.medium, t)!,
+      big: lerpDouble(big, other.big, t)!,
+      smallradius: lerpDouble(smallradius, other.smallradius, t)!,
+      bigradius: lerpDouble(bigradius, other.bigradius, t)!,
     );
   }
 }
