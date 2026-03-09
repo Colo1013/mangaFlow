@@ -35,12 +35,12 @@ class Manga {
 
   Map<String, dynamic> toMap() {
     return <String, dynamic>{
-      "id": this.id,
-      "title": this.title,
-      "coverUrl": this.coverUrl,
-      "totalVolume": this.totalVolume,
-      "currentVolume": this.currentVolume,
-      "isFavorite": this.isFavorite == false ? 0 : 1,
+      "id": id,
+      "title": title,
+      "coverUrl": coverUrl,
+      "totalVolume": totalVolume,
+      "currentVolume": currentVolume,
+      "isFavorite": isFavorite == false ? 0 : 1,
     };
   }
 
