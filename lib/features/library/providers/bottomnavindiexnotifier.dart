@@ -1,6 +1,9 @@
-import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:riverpod_annotation/riverpod_annotation.dart';
 
-class BottomNavIndexNotifier extends Notifier<int> {
+part 'bottomnavindiexnotifier.g.dart';
+
+@riverpod
+class BottomNavIndexNotifier extends _$BottomNavIndexNotifier {
   @override
   int build() {
     return 0; // Indice iniziale
@@ -10,10 +13,3 @@ class BottomNavIndexNotifier extends Notifier<int> {
     state = newIndex;
   }
 }
-
-// 2. Dichiariamo il NotifierProvider
-final bottomNavIndexProvider = NotifierProvider<BottomNavIndexNotifier, int>(
-  () {
-    return BottomNavIndexNotifier();
-  },
-);

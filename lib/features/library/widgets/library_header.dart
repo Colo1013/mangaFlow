@@ -1,26 +1,20 @@
 import 'package:flutter/material.dart';
-import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:mangaflow/features/library/providers/mangalistnotifier.dart';
+import 'package:mangaflow/data/models/manga.dart';
 import 'package:mangaflow/features/library/widgets/manga_cover_card.dart';
 import 'package:mangaflow/theme/app_sizes.dart';
 
-class LibraryHeader extends ConsumerWidget {
-  const LibraryHeader({super.key});
+class LibraryHeader extends StatelessWidget {
+  final List<Manga> listaManga;
+  const LibraryHeader({super.key, required this.listaManga});
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
-    final appSizes = Theme.of(context).extension<AppSizeExtension>()!;
-    final favoriteMangas = ref
-        .watch(mangaListProvider)
-        .where((m) => m.isFavorite)
-        .toList();
-
-    if (favoriteMangas.isEmpty) {
+  Widget build(BuildContext context) {
+    if (listaManga.isEmpty) {
       return const SliverToBoxAdapter(child: SizedBox.shrink());
     }
 
-    // Utilizziamo LayoutBuilder per adattare l'altezza del carosello dinamicamente
-    // in base allo spazio disponibile, garantendo proporzioni ottimali su schermi più larghi (Tablet/Desktop).
+    final appSizes = Theme.of(context).extension<AppSizeExtension>()!;
+
     return SliverToBoxAdapter(
       child: LayoutBuilder(
         builder: (context, constraints) {
@@ -45,9 +39,9 @@ class LibraryHeader extends ConsumerWidget {
                 child: ListView.builder(
                   scrollDirection: Axis.horizontal,
                   padding: EdgeInsets.symmetric(horizontal: appSizes.medium),
-                  itemCount: favoriteMangas.length,
+                  itemCount: listaManga.length,
                   itemBuilder: (context, index) {
-                    final manga = favoriteMangas[index];
+                    final manga = listaManga[index];
                     return Padding(
                       padding: EdgeInsets.only(right: appSizes.medium),
                       child: MangaCoverCard(

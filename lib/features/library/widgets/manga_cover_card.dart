@@ -34,11 +34,11 @@ class MangaCoverCard extends StatelessWidget {
 
     return GestureDetector(
       onTap: () {
-        Navigator.push(
-          context,
-          MaterialPageRoute(
-            builder: (context) => MangaDetailView(manga: manga),
-          ),
+        showModalBottomSheet(
+          context: context,
+          isScrollControlled: true,
+          backgroundColor: Colors.transparent,
+          builder: (context) => MangaDetailView(mangaId: manga.id),
         );
       },
       child: _buildCard(context, isInteractive: true),

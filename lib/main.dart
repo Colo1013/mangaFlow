@@ -1,14 +1,22 @@
 import 'dart:ui' as ui;
+import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:sqflite_common_ffi/sqflite_ffi.dart';
 import 'package:mangaflow/features/focus_dojo/focusdojo_view.dart';
 import 'package:mangaflow/features/library/library_view.dart';
 import 'package:mangaflow/features/profile/profile_view.dart';
 import 'package:mangaflow/theme/mangaquestapp.dart';
 import 'package:mangaflow/features/library/providers/bottomnavindiexnotifier.dart';
-// 1. Creiamo un Notifier per gestire l'indice della BottomNav
 
 void main() {
+  WidgetsFlutterBinding.ensureInitialized();
+
+  if (Platform.isWindows || Platform.isLinux) {
+    sqfliteFfiInit();
+    databaseFactory = databaseFactoryFfi;
+  }
+
   runApp(const ProviderScope(child: Mangaquestapp(home: MainAppView())));
 }
 
@@ -26,7 +34,6 @@ class MainAppView extends ConsumerWidget {
     final int currentIndex = ref.watch(bottomNavIndexProvider);
 
     return Scaffold(
-      extendBody: true, // Necessario per il blured background della navbar
       appBar: AppBar(
         title: const Text(
           "MangaFlow",
@@ -72,8 +79,8 @@ class _GlassBottomNav extends StatelessWidget {
             backgroundColor:
                 Colors.transparent, // Sfondo gestito dal Container sopra
             elevation: 0,
-            selectedItemColor: Theme.of(context).primaryColor,
-            unselectedItemColor: Colors.grey,
+            selectedItemColor: Theme.of(context).colorScheme.primary,
+            unselectedItemColor: Theme.of(context).colorScheme.onSurfaceVariant,
             showSelectedLabels: true,
             showUnselectedLabels: true,
             type: BottomNavigationBarType.fixed,
