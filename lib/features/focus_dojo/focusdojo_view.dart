@@ -3,6 +3,7 @@ import 'dart:math';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:mangaflow/features/focus_dojo/widgets/exp_pill.dart';
+import 'package:mangaflow/features/focus_dojo/widgets/focus_circle.dart';
 import 'package:mangaflow/features/focus_dojo/widgets/focus_ring_painter.dart';
 
 class FocusdojoView extends ConsumerStatefulWidget {
@@ -71,12 +72,25 @@ class _FocusdojoViewState extends ConsumerState<FocusdojoView>
                   child: AspectRatio(
                     aspectRatio: 1.0,
                     key: _ringKey,
-                    child: CustomPaint(
-                      painter: FocusRingPainter(
-                        progressione: _progressione,
-                        activeColor: colorScheme.primary,
-                        inactiveColor: colorScheme.onSurface,
-                      ),
+                    child: Stack(
+                      alignment: Alignment.center,
+                      children: [
+                        SizedBox.expand(
+                          child: CustomPaint(
+                            painter: FocusRingPainter(
+                              progressione: _progressione,
+                              activeColor: colorScheme.primary,
+                              inactiveColor: colorScheme.onSurface,
+                            ),
+                          ),
+                        ),
+                        Padding(
+                          padding: EdgeInsets.all(18),
+                          child: FocusCircle(
+                            durata: _durataMax * _progressione,
+                          ),
+                        ),
+                      ],
                     ),
                   ),
                 ),
@@ -96,14 +110,15 @@ class _FocusdojoViewState extends ConsumerState<FocusdojoView>
     final pos = details.localPosition;
     final size =
         (_ringKey.currentContext!.findRenderObject() as RenderBox).size;
-
     final dx = pos.dx - size.width / 2;
     final dy = pos.dy - size.height / 2;
-
     final angolo = (atan2(dy, dx) + pi / 2) % (2 * pi);
+    final nuovaProgressione = angolo / (2 * pi);
+
+    if ((nuovaProgressione - _progressione).abs() > 0.5) return;
 
     setState(() {
-      _progressione = angolo / (2 * pi);
+      _progressione = nuovaProgressione;
     });
   }
 

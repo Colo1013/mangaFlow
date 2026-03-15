@@ -22,36 +22,41 @@ class ExpPill extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final colorScheme = Theme.of(context).colorScheme;
     final appSizes = Theme.of(context).extension<AppSizeExtension>()!;
     final progressione = data.expAttuali / data.expTotali;
 
     return Center(
       child: ClipRRect(
-        borderRadius: BorderRadius.circular(100),
+        borderRadius: BorderRadiusGeometry.circular(50),
         child: Stack(
-          alignment: Alignment.centerLeft,
+          alignment: Alignment.center,
           children: [
+            // Layer 1 — Sfondo frosted glass
             Positioned.fill(
               child: BackdropFilter(
                 filter: ImageFilter.blur(sigmaX: 10.0, sigmaY: 10.0),
-                child: Container(color: Colors.white.withValues(alpha: 0.15)),
+                child: Container(color: Colors.white12),
               ),
             ),
+            // Layer 2 — Barra di progressione
             Positioned.fill(
-              child: FractionallySizedBox(
-                alignment: Alignment.centerLeft,
-                widthFactor: progressione,
-                child: Container(
-                  foregroundDecoration: BoxDecoration(
-                    color: data.coloreSfondo.withValues(alpha: 0.9),
-                    border: Border.all(
-                      color: Colors.white.withValues(alpha: 0.15),
-                      width: 4,
+              child: Padding(
+                padding: EdgeInsets.all(2.5),
+
+                child: FractionallySizedBox(
+                  alignment: Alignment.centerLeft,
+                  widthFactor: progressione,
+                  child: Container(
+                    decoration: BoxDecoration(
+                      color: data.coloreSfondo.withValues(alpha: 0.85),
+                      borderRadius: BorderRadius.circular(40),
                     ),
                   ),
                 ),
               ),
             ),
+            // Layer 3 — Testo
             Padding(
               padding: EdgeInsets.symmetric(
                 horizontal: appSizes.medium,
@@ -61,21 +66,19 @@ class ExpPill extends StatelessWidget {
                 mainAxisSize: MainAxisSize.min,
                 spacing: appSizes.small,
                 children: [
-                  Text(data.grado),
-                  Text("•"),
-                  Text("${data.expAttuali}/${data.expTotali} EXP"),
-                ],
-              ),
-            ),
-            Positioned.fill(
-              child: Container(
-                decoration: BoxDecoration(
-                  borderRadius: BorderRadius.circular(100),
-                  border: Border.all(
-                    width: 4,
-                    color: Colors.white.withValues(alpha: 0.30),
+                  Text(
+                    data.grado,
+                    style: TextStyle(
+                      fontWeight: FontWeight.bold,
+                      color: colorScheme.onSurface,
+                    ),
                   ),
-                ),
+                  Text("•", style: TextStyle(color: colorScheme.onSurface)),
+                  Text(
+                    "${data.expAttuali}/${data.expTotali} EXP",
+                    style: TextStyle(color: colorScheme.onSurface),
+                  ),
+                ],
               ),
             ),
           ],

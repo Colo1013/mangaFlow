@@ -22,7 +22,7 @@ class FocusCircle extends StatelessWidget {
             Text(
               durata.inMinutes == 0
                   ? "∞"
-                  : "${durata.inMinutes} : ${durata.inSeconds % 60}",
+                  : "${(durata.inMinutes).toString().padLeft(2, '0')} : ${(durata.inSeconds % 60).toString().padLeft(2, '0')}",
             ),
             Text(
               durata.inMinutes == 0 ? "Sessione Libera" : "Sessione a tempo",
