@@ -44,6 +44,7 @@ dependencies:
   riverpod_annotation: ^4.0.2
   sqflite_common_ffi: ^2.4.0+2
   palette_generator: ^0.3.3+7
+  google_fonts: ^8.0.2
 dev_dependencies:
   flutter_test:
     sdk: flutter

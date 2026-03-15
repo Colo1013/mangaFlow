@@ -1,5 +1,4 @@
 import 'dart:ui';
-
 import 'package:flutter/material.dart';
 import 'package:mangaflow/theme/app_sizes.dart';
 
@@ -24,30 +23,62 @@ class ExpPill extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final appSizes = Theme.of(context).extension<AppSizeExtension>()!;
+    final progressione = data.expAttuali / data.expTotali;
+
     return Center(
-      child: SafeArea(
-        child: ClipRRect(
-          borderRadius: BorderRadius.circular(appSizes.smallradius),
-          child: BackdropFilter(
-            filter: ImageFilter.blur(sigmaX: 10.0, sigmaY: 10.0),
-            child: Container(
-              width: double.infinity,
-              padding: EdgeInsets.symmetric(
-                horizontal: appSizes.small,
-                vertical: appSizes.medium,
+      child: ClipRRect(
+        borderRadius: BorderRadius.circular(100),
+        child: Stack(
+          alignment: Alignment.centerLeft,
+          children: [
+            Positioned.fill(
+              child: BackdropFilter(
+                filter: ImageFilter.blur(sigmaX: 10.0, sigmaY: 10.0),
+                child: Container(color: Colors.white.withValues(alpha: 0.15)),
               ),
-              color: data.coloreSfondo.withValues(alpha: 0.2),
+            ),
+            Positioned.fill(
+              child: FractionallySizedBox(
+                alignment: Alignment.centerLeft,
+                widthFactor: progressione,
+                child: Container(
+                  foregroundDecoration: BoxDecoration(
+                    color: data.coloreSfondo.withValues(alpha: 0.9),
+                    border: Border.all(
+                      color: Colors.white.withValues(alpha: 0.15),
+                      width: 4,
+                    ),
+                  ),
+                ),
+              ),
+            ),
+            Padding(
+              padding: EdgeInsets.symmetric(
+                horizontal: appSizes.medium,
+                vertical: appSizes.small,
+              ),
               child: Row(
-                mainAxisAlignment: MainAxisAlignment.center,
-                spacing: appSizes.medium,
+                mainAxisSize: MainAxisSize.min,
+                spacing: appSizes.small,
                 children: [
-                  Text("${data.expAttuali} / ${data.expTotali}"),
-                  Icon(Icons.circle, size: appSizes.small),
                   Text(data.grado),
+                  Text("•"),
+                  Text("${data.expAttuali}/${data.expTotali} EXP"),
                 ],
               ),
             ),
-          ),
+            Positioned.fill(
+              child: Container(
+                decoration: BoxDecoration(
+                  borderRadius: BorderRadius.circular(100),
+                  border: Border.all(
+                    width: 4,
+                    color: Colors.white.withValues(alpha: 0.30),
+                  ),
+                ),
+              ),
+            ),
+          ],
         ),
       ),
     );

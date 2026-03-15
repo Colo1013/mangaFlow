@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:google_fonts/google_fonts.dart';
 import "app_sizes.dart";
 
 class Mangaquestapp extends StatelessWidget {
@@ -10,6 +11,7 @@ class Mangaquestapp extends StatelessWidget {
   Widget build(BuildContext context) {
     return MaterialApp(
       theme: ThemeData(
+        textTheme: GoogleFonts.interTextTheme(),
         useMaterial3: true,
         colorScheme: ColorScheme.fromSeed(
           seedColor: Colors.deepPurple,
@@ -25,6 +27,7 @@ class Mangaquestapp extends StatelessWidget {
         ],
       ),
       darkTheme: ThemeData(
+        textTheme: GoogleFonts.interTextTheme(ThemeData.dark().textTheme),
         useMaterial3: true,
         colorScheme: ColorScheme.fromSeed(
           seedColor: Colors.blueAccent,
