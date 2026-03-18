@@ -1,4 +1,6 @@
 import 'package:mangaflow/data/models/manga.dart';
+import 'package:mangaflow/data/models/profile.dart';
+import 'package:mangaflow/data/models/session.dart';
 import 'package:sqflite/sqflite.dart';
 import 'package:path/path.dart';
 
@@ -20,14 +22,20 @@ class DatabaseHelper {
     String percorso = join(cartella, "mangas.db");
     return await openDatabase(
       percorso,
-      version: 2,
+      version: 3,
       onCreate: (Database db, int version) async {
         await db.execute(
           "CREATE TABLE mangas (id TEXT PRIMARY KEY, title TEXT UNIQUE, coverUrl TEXT, currentVolume INTEGER, totalVolume INTEGER, isFavorite INTEGER)",
         );
+        await db.execute(
+          "CREATE TABLE sessions (startTimestamp INTEGER PRIMARY KEY,endTimestamp INTEGER, mangaId INTEGER, expGained INTEGER )",
+        );
+        await db.execute(
+          "CREATE TABLE profile (id INTEGER PRIMARY KEY, userName TEXT, totalExp INTEGER)",
+        );
       },
       onUpgrade: (Database db, int oldVersion, int newVersion) async {
-        if (oldVersion < 2) {
+        if (oldVersion < 3) {
           await db.execute('ALTER TABLE mangas RENAME TO mangas_old');
           await db.execute(
             'CREATE TABLE mangas (id TEXT PRIMARY KEY, title TEXT UNIQUE, coverUrl TEXT, currentVolume INTEGER, totalVolume INTEGER, isFavorite INTEGER)',
@@ -36,6 +44,12 @@ class DatabaseHelper {
             'INSERT OR IGNORE INTO mangas SELECT * FROM mangas_old',
           );
           await db.execute('DROP TABLE mangas_old');
+          await db.execute(
+            "CREATE TABLE sessions (startTimestamp INTEGER PRIMARY KEY,endTimestamp INTEGER, mangaId INTEGER, expGained INTEGER )",
+          );
+          await db.execute(
+            "CREATE TABLE profile (id INTEGER PRIMARY KEY, userName TEXT, totalExp INTEGER)",
+          );
         }
       },
     );
@@ -46,6 +60,24 @@ class DatabaseHelper {
     await db.insert(
       "mangas",
       manga.toMap(),
+      conflictAlgorithm: ConflictAlgorithm.abort,
+    );
+  }
+
+  Future<void> insertSession(Session session) async {
+    final db = await instance.database;
+    await db.insert(
+      "sessions",
+      session.toMap(),
+      conflictAlgorithm: ConflictAlgorithm.abort,
+    );
+  }
+
+  Future<void> insertProfile(Profile profile) async {
+    final db = await instance.database;
+    await db.insert(
+      "profile",
+      profile.toMap(),
       conflictAlgorithm: ConflictAlgorithm.abort,
     );
   }
@@ -72,6 +104,17 @@ class DatabaseHelper {
     return out;
   }
 
+  Future<Profile> getProfile() async {
+    final db = await instance.database;
+    List<Map<String, dynamic>> mappe = await db.query("profile");
+    if (mappe.isEmpty) {
+      Profile base = Profile(totalExp: 0, userName: "Empty");
+      await insertProfile(base);
+      return base;
+    }
+    return Profile.fromMap(mappe.single);
+  }
+
   Future<void> updateManga(Manga manga) async {
     final db = await instance.database;
     await db.update(
@@ -79,6 +122,17 @@ class DatabaseHelper {
       manga.toMap(),
       where: "id = ?",
       whereArgs: [manga.id],
+    );
+  }
+
+  Future<void> updateProfile(Profile profile) async {
+    final db = await instance.database;
+
+    await db.update(
+      "profile",
+      profile.toMap(),
+      where: "id = ?",
+      whereArgs: [profile.id],
     );
   }
 

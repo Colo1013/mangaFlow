@@ -15,9 +15,9 @@ class Profile {
 
   int get level {
     int out = 0;
-    levelMap.entries.forEach((entry) {
+    for (var entry in levelMap.entries) {
       out = entry.value <= totalExp ? entry.key : out;
-    });
+    }
     return out;
   }
 
@@ -34,6 +34,13 @@ class Profile {
       totalExp: map["totalExp"],
       userName: map["userName"],
       id: map["id"],
+    );
+  }
+
+  Profile copyWith({int? totalExp, String? userName}) {
+    return Profile(
+      totalExp: totalExp ?? this.totalExp,
+      userName: userName ?? this.userName,
     );
   }
 }
