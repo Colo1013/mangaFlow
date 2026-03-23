@@ -22,20 +22,20 @@ class DatabaseHelper {
     String percorso = join(cartella, "mangas.db");
     return await openDatabase(
       percorso,
-      version: 3,
+      version: 4,
       onCreate: (Database db, int version) async {
         await db.execute(
           "CREATE TABLE mangas (id TEXT PRIMARY KEY, title TEXT UNIQUE, coverUrl TEXT, currentVolume INTEGER, totalVolume INTEGER, isFavorite INTEGER)",
         );
         await db.execute(
-          "CREATE TABLE sessions (startTimestamp INTEGER PRIMARY KEY,endTimestamp INTEGER, mangaId INTEGER, expGained INTEGER )",
+          "CREATE TABLE sessions (startTimestamp INTEGER PRIMARY KEY,endTimestamp INTEGER, mangaId TEXT, expGained INTEGER )",
         );
         await db.execute(
-          "CREATE TABLE profile (id INTEGER PRIMARY KEY, userName TEXT, totalExp INTEGER)",
+          "CREATE TABLE profile (id TEXT PRIMARY KEY, userName TEXT, totalExp INTEGER)",
         );
       },
       onUpgrade: (Database db, int oldVersion, int newVersion) async {
-        if (oldVersion < 3) {
+        if (oldVersion < 4) {
           await db.execute('ALTER TABLE mangas RENAME TO mangas_old');
           await db.execute(
             'CREATE TABLE mangas (id TEXT PRIMARY KEY, title TEXT UNIQUE, coverUrl TEXT, currentVolume INTEGER, totalVolume INTEGER, isFavorite INTEGER)',
@@ -44,11 +44,13 @@ class DatabaseHelper {
             'INSERT OR IGNORE INTO mangas SELECT * FROM mangas_old',
           );
           await db.execute('DROP TABLE mangas_old');
+          await db.execute('DROP TABLE IF EXISTS sessions');
+          await db.execute('DROP TABLE IF EXISTS profile');
           await db.execute(
-            "CREATE TABLE sessions (startTimestamp INTEGER PRIMARY KEY,endTimestamp INTEGER, mangaId INTEGER, expGained INTEGER )",
+            "CREATE TABLE sessions (startTimestamp INTEGER PRIMARY KEY,endTimestamp INTEGER, mangaId TEXT, expGained INTEGER )",
           );
           await db.execute(
-            "CREATE TABLE profile (id INTEGER PRIMARY KEY, userName TEXT, totalExp INTEGER)",
+            "CREATE TABLE profile (id TEXT PRIMARY KEY, userName TEXT, totalExp INTEGER)",
           );
         }
       },
@@ -139,5 +141,11 @@ class DatabaseHelper {
   Future<void> deleteManga(Manga manga) async {
     final db = await instance.database;
     await db.delete("mangas", where: "id = ?", whereArgs: [manga.id]);
+  }
+
+  Future<List<Session>> getSessions() async {
+    final db = await instance.database;
+    final mappe = await db.query("sessions", orderBy: "startTimestamp DESC");
+    return [for (final m in mappe) Session.fromMap(m)];
   }
 }

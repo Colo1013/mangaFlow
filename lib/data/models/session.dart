@@ -1,7 +1,7 @@
 class Session {
   final int startTimestamp;
   final int endTimestamp;
-  final int mangaId;
+  final String mangaId;
   final int expGained;
 
   Session({
@@ -14,7 +14,7 @@ class Session {
   Session copyWith({
     int? startTimestamp,
     int? endTimestamp,
-    int? mangaId,
+    String? mangaId,
     int? expGained,
   }) {
     return Session(

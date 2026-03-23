@@ -17,6 +17,8 @@ class MangaCoverCard extends StatelessWidget {
   /// Utilizzato per forzare width/height nel caso di `MangaCoverStyle.detail` o caroselli
   final double? width;
   final double? height;
+  final VoidCallback? onTap;
+  final bool isSelected;
 
   const MangaCoverCard({
     super.key,
@@ -24,6 +26,8 @@ class MangaCoverCard extends StatelessWidget {
     this.style = MangaCoverStyle.standard,
     this.width,
     this.height,
+    this.onTap,
+    this.isSelected = false,
   });
 
   @override
@@ -33,14 +37,16 @@ class MangaCoverCard extends StatelessWidget {
     }
 
     return GestureDetector(
-      onTap: () {
-        showModalBottomSheet(
-          context: context,
-          isScrollControlled: true,
-          backgroundColor: Colors.transparent,
-          builder: (context) => MangaDetailView(mangaId: manga.id),
-        );
-      },
+      onTap:
+          onTap ??
+          () {
+            showModalBottomSheet(
+              context: context,
+              isScrollControlled: true,
+              backgroundColor: Colors.transparent,
+              builder: (context) => MangaDetailView(mangaId: manga.id),
+            );
+          },
       child: _buildCard(context, isInteractive: true),
     );
   }
@@ -68,6 +74,9 @@ class MangaCoverCard extends StatelessWidget {
         borderRadius: BorderRadius.circular(
           style == MangaCoverStyle.detail ? 20 : 16,
         ),
+        border: isSelected
+            ? Border.all(color: Theme.of(context).colorScheme.primary, width: 3)
+            : null,
         boxShadow: [
           BoxShadow(
             color: Colors.black.withValues(

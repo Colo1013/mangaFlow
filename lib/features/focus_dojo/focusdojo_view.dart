@@ -1,12 +1,19 @@
 import 'dart:math';
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:mangaflow/data/models/profile_repository.dart';
 import 'package:mangaflow/features/focus_dojo/providers/focus_session.dart';
+import 'package:mangaflow/features/focus_dojo/providers/profile_notifier.dart';
 import 'package:mangaflow/features/focus_dojo/widgets/exp_pill.dart';
 import 'package:mangaflow/features/focus_dojo/widgets/focus_circle.dart';
 import 'package:mangaflow/features/focus_dojo/widgets/focus_ring_painter.dart';
+import 'package:mangaflow/features/focus_dojo/widgets/manga_selection_sheet.dart';
+import 'package:mangaflow/features/focus_dojo/widgets/pausa_overlay_content.dart';
 import 'package:mangaflow/features/focus_dojo/widgets/ritual_painter.dart';
+import 'package:mangaflow/features/focus_dojo/widgets/session_summary_card.dart';
 import 'package:mangaflow/features/focus_dojo/widgets/waiting_overlay_content.dart';
+import 'package:mangaflow/features/library/providers/mangalistnotifier.dart';
 
 class FocusdojoView extends ConsumerStatefulWidget {
   const FocusdojoView({super.key});
@@ -25,7 +32,7 @@ class _FocusdojoViewState extends ConsumerState<FocusdojoView>
   final _ringKey = GlobalKey();
   OverlayEntry? _overlayEntry;
   bool _mostraIstruzioni = false;
-
+  StatoSchermo _statoCorrente = StatoSchermo.idle;
   // Rinominato da _controller: gestisce lo "snap" dell'anello ai multipli di 5 min.
   late AnimationController _snapController;
   // Gestisce la transizione grafica del rituale pre-sessione.
@@ -80,8 +87,20 @@ class _FocusdojoViewState extends ConsumerState<FocusdojoView>
 
   @override
   Widget build(BuildContext context) {
+    // in cima al build, dopo ref.watch(focusSessionProvider)
+    final profileAsync = ref.watch(profileProvider);
+    final ultimaSessione = ref
+        .read(focusSessionProvider.notifier)
+        .ultimaSessione;
     final stato = ref.watch(focusSessionProvider);
     final colorScheme = Theme.of(context).colorScheme;
+
+    ref.listen(focusSessionProvider, (previous, next) {
+      _statoCorrente = next;
+      _overlayEntry?.markNeedsBuild();
+
+      if (_statoCorrente == StatoSchermo.idle) _ritualController.reverse();
+    });
 
     return Scaffold(
       body: Stack(
@@ -91,14 +110,20 @@ class _FocusdojoViewState extends ConsumerState<FocusdojoView>
               mainAxisAlignment: MainAxisAlignment.start,
               children: [
                 const SizedBox(height: 16),
-                ExpPill(
-                  data: ExpMockData(
-                    grado: "Novizio",
-                    expAttuali: 150,
-                    expTotali: 300,
-                    coloreSfondo: Colors.blue,
-                  ),
+                profileAsync.when(
+                  data: (profile) => ExpPill(profile: profile),
+                  loading: () => const SizedBox.shrink(),
+                  error: (_, _) => const SizedBox.shrink(),
                 ),
+                // dentro la Column del SafeArea, dopo ExpPill
+                if (kDebugMode)
+                  TextButton(
+                    onPressed: () async {
+                      await ProfileRepository().addExp(100);
+                      ref.read(profileProvider.notifier).refresh();
+                    },
+                    child: const Text("+100 EXP (debug)"),
+                  ),
                 const SizedBox(height: 16),
                 Expanded(
                   child: GestureDetector(
@@ -130,6 +155,24 @@ class _FocusdojoViewState extends ConsumerState<FocusdojoView>
                                 ),
                               ),
                             ),
+                            // Terzo figlio dello Stack nel body
+                            AnimatedSlide(
+                              offset: ultimaSessione != null
+                                  ? Offset
+                                        .zero // visibile
+                                  : const Offset(
+                                      0,
+                                      1,
+                                    ), // nascosta sotto lo schermo
+                              duration: const Duration(milliseconds: 400),
+                              curve: Curves.easeOutCubic,
+                              child: Align(
+                                alignment: Alignment.bottomCenter,
+                                child: ultimaSessione != null
+                                    ? _buildSummaryCard(ultimaSessione)
+                                    : const SizedBox.shrink(),
+                              ),
+                            ),
                           ],
                         ),
                       ),
@@ -144,7 +187,7 @@ class _FocusdojoViewState extends ConsumerState<FocusdojoView>
           // senza coinvolgere l'intera view a ogni frame dell'animazione.
           AnimatedBuilder(
             animation: _ritualController,
-            builder: (_, __) {
+            builder: (_, _) {
               if (stato != StatoSchermo.attesa) return const SizedBox.shrink();
               return SizedBox.expand(
                 child: CustomPaint(
@@ -158,6 +201,25 @@ class _FocusdojoViewState extends ConsumerState<FocusdojoView>
     );
   }
 
+  Widget _buildSummaryCard(SessionResult risultato) {
+    final mangaListAsync = ref.watch(mangaListProvider);
+
+    return mangaListAsync.when(
+      data: (mangas) {
+        final manga = mangas.firstWhere((m) => m.id == risultato.mangaId);
+        return SessionSummaryCard(
+          manga: manga,
+          expGuadagnati: risultato.expGuadagnati,
+          durataEffettiva: risultato.durataEffettiva,
+          onDismiss: () => setState(() {
+            ref.read(focusSessionProvider.notifier).ultimaSessione = null;
+          }),
+        );
+      },
+      loading: () => const SizedBox.shrink(),
+      error: (_, _) => const SizedBox.shrink(),
+    );
+  }
   // ─── Gesture handlers ──────────────────────────────────────────────────────
 
   void _onPanStart(DragStartDetails details) => _snapController.stop();
@@ -191,18 +253,28 @@ class _FocusdojoViewState extends ConsumerState<FocusdojoView>
   }
 
   void _onCentralTap() {
-    ref
-        .read(focusSessionProvider.notifier)
-        .avviaSessione(
-          durata: _progressione > 0 ? _durataMax * _progressione : null,
-        );
-    _ritualController.reset();
-    _mostraIstruzioni = false;
-
-    final size = MediaQuery.of(context).size;
-    _overlayEntry = _buildOverlayEntry(size);
-    Overlay.of(context).insert(_overlayEntry!);
-    _ritualController.forward();
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: Colors.transparent,
+      builder: (_) => MangaSelectionSheet(
+        onConfirm: (mangaId) {
+          // questo viene chiamato DOPO che il sheet è sparito
+          ref
+              .read(focusSessionProvider.notifier)
+              .avviaSessione(
+                mangaId: mangaId,
+                durata: _progressione > 0 ? _durataMax * _progressione : null,
+              );
+          _ritualController.reset();
+          _mostraIstruzioni = false;
+          final size = MediaQuery.of(context).size;
+          _overlayEntry = _buildOverlayEntry(size);
+          Overlay.of(context).insert(_overlayEntry!);
+          _ritualController.forward();
+        },
+      ),
+    );
   }
 
   // ─── Builder dell'overlay ──────────────────────────────────────────────────
@@ -214,11 +286,9 @@ class _FocusdojoViewState extends ConsumerState<FocusdojoView>
     return OverlayEntry(
       builder: (_) => AnimatedBuilder(
         animation: _ritualController,
-        builder: (_, __) => Material(
+        builder: (_, _) => Material(
           type: MaterialType.transparency,
-          child: SizedBox(
-            width: size.width,
-            height: size.height,
+          child: SizedBox.expand(
             child: Stack(
               children: [
                 // Sfondo: pennellate del rituale
@@ -228,11 +298,22 @@ class _FocusdojoViewState extends ConsumerState<FocusdojoView>
                 ),
                 // Primo piano: istruzioni + pulsante annulla
                 if (_mostraIstruzioni)
-                  WaitingOverlayContent(
-                    opacity: _ritualController.value,
-                    screenHeight: size.height,
-                    onAnnulla: _tornaIndietro,
-                  ),
+                  if (_statoCorrente == StatoSchermo.pausa)
+                    PausaOverlayContent(
+                      opacity: _ritualController.value,
+                      screenHeight: size.height,
+                      onRiprendi: () =>
+                          ref.read(focusSessionProvider.notifier).riprendi(),
+                      onTermina: () => ref
+                          .read(focusSessionProvider.notifier)
+                          .terminaSessione(),
+                    )
+                  else
+                    WaitingOverlayContent(
+                      opacity: _ritualController.value,
+                      screenHeight: size.height,
+                      onAnnulla: _tornaIndietro,
+                    ),
               ],
             ),
           ),

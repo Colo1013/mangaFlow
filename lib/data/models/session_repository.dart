@@ -6,4 +6,6 @@ class SessionRepository {
 
   Future<void> insert(Session session) async =>
       await _db.insertSession(session);
+
+  Future<List<Session>> getAll() async => await _db.getSessions();
 }

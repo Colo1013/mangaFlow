@@ -1,30 +1,28 @@
 import 'dart:ui';
 import 'package:flutter/material.dart';
+import 'package:mangaflow/data/models/profile.dart';
 import 'package:mangaflow/theme/app_sizes.dart';
 
-class ExpMockData {
-  final String grado;
-  final int expAttuali;
-  final int expTotali;
-  final Color coloreSfondo;
-
-  const ExpMockData({
-    required this.grado,
-    required this.expAttuali,
-    required this.expTotali,
-    required this.coloreSfondo,
-  });
-}
-
 class ExpPill extends StatelessWidget {
-  final ExpMockData data;
-  const ExpPill({super.key, required this.data});
+  final Profile profile;
+  const ExpPill({super.key, required this.profile});
 
   @override
   Widget build(BuildContext context) {
     final colorScheme = Theme.of(context).colorScheme;
     final appSizes = Theme.of(context).extension<AppSizeExtension>()!;
-    final progressione = data.expAttuali / data.expTotali;
+
+    final expAttuali = profile.totalExp;
+    final expProssimoLivello = Profile.levelMap[profile.level + 1];
+    final expLivelloCorrente = Profile.levelMap[profile.level] ?? 0;
+
+    // Se non esiste un livello successivo, siamo al massimo
+    final bool isMaxLevel = expProssimoLivello == null;
+
+    final double progressione = isMaxLevel
+        ? 1.0
+        : (expAttuali - expLivelloCorrente) /
+              (expProssimoLivello - expLivelloCorrente);
 
     return Center(
       child: ClipRRect(
@@ -42,14 +40,13 @@ class ExpPill extends StatelessWidget {
             // Layer 2 — Barra di progressione
             Positioned.fill(
               child: Padding(
-                padding: EdgeInsets.all(2.5),
-
+                padding: const EdgeInsets.all(2.5),
                 child: FractionallySizedBox(
                   alignment: Alignment.centerLeft,
-                  widthFactor: progressione,
+                  widthFactor: progressione.clamp(0.0, 1.0),
                   child: Container(
                     decoration: BoxDecoration(
-                      color: data.coloreSfondo.withValues(alpha: 0.85),
+                      color: profile.levelColor.withValues(alpha: 0.85),
                       borderRadius: BorderRadius.circular(40),
                     ),
                   ),
@@ -67,7 +64,7 @@ class ExpPill extends StatelessWidget {
                 spacing: appSizes.small,
                 children: [
                   Text(
-                    data.grado,
+                    profile.levelName,
                     style: TextStyle(
                       fontWeight: FontWeight.bold,
                       color: colorScheme.onSurface,
@@ -75,7 +72,9 @@ class ExpPill extends StatelessWidget {
                   ),
                   Text("•", style: TextStyle(color: colorScheme.onSurface)),
                   Text(
-                    "${data.expAttuali}/${data.expTotali} EXP",
+                    isMaxLevel
+                        ? "Livello Massimo"
+                        : "$expAttuali/$expProssimoLivello EXP",
                     style: TextStyle(color: colorScheme.onSurface),
                   ),
                 ],

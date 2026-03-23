@@ -1,7 +1,9 @@
+import 'dart:ui';
+
 class Profile {
   final int totalExp;
   final String userName;
-  final int id = 1;
+  final String id = "1";
   static const Map<int, int> levelMap = {
     1: 0,
     2: 100,
@@ -10,6 +12,27 @@ class Profile {
     5: 680,
     6: 1300,
   };
+
+  static const Map<int, String> levelNames = {
+    1: "Novizio",
+    2: "Lettore",
+    3: "Appassionato",
+    4: "Veterano",
+    5: "Maestro",
+    6: "Leggenda",
+  };
+
+  static const Map<int, Color> levelColors = {
+    1: Color(0xFF9E9E9E), // grigio tenue
+    2: Color(0xFF64B5F6), // azzurro polvere
+    3: Color(0xFF81C784), // verde salvia
+    4: Color(0xFFFFB74D), // arancio caldo
+    5: Color(0xFFBA68C8), // viola
+    6: Color(0xFFE57373), // rosso oro
+  };
+
+  String get levelName => levelNames[level] ?? "???";
+  Color get levelColor => levelColors[level] ?? const Color(0xFF9E9E9E);
 
   Profile({required this.totalExp, required this.userName, id});
 
