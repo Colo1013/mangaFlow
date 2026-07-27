@@ -22,7 +22,7 @@ class DatabaseHelper {
     String percorso = join(cartella, "mangas.db");
     return await openDatabase(
       percorso,
-      version: 4,
+      version: 5, // <-- 1. Versione incrementata a 5
       onCreate: (Database db, int version) async {
         await db.execute(
           "CREATE TABLE mangas (id TEXT PRIMARY KEY, title TEXT UNIQUE, coverUrl TEXT, currentVolume INTEGER, totalVolume INTEGER, isFavorite INTEGER)",
@@ -30,8 +30,9 @@ class DatabaseHelper {
         await db.execute(
           "CREATE TABLE sessions (startTimestamp INTEGER PRIMARY KEY,endTimestamp INTEGER, mangaId TEXT, expGained INTEGER )",
         );
+        // <-- 2. Aggiunte colonne avatarPath e createdAt
         await db.execute(
-          "CREATE TABLE profile (id TEXT PRIMARY KEY, userName TEXT, totalExp INTEGER)",
+          "CREATE TABLE profile (id TEXT PRIMARY KEY, userName TEXT, totalExp INTEGER, avatarPath TEXT, createdAt INTEGER)",
         );
       },
       onUpgrade: (Database db, int oldVersion, int newVersion) async {
@@ -51,6 +52,16 @@ class DatabaseHelper {
           );
           await db.execute(
             "CREATE TABLE profile (id TEXT PRIMARY KEY, userName TEXT, totalExp INTEGER)",
+          );
+        }
+
+        // <-- 3. Migrazione automatica: aggiunge le colonne senza perdere l'EXP
+        if (oldVersion < 5) {
+          await db.execute(
+            "ALTER TABLE profile ADD COLUMN avatarPath TEXT DEFAULT 'assets/images/avatars/default.webp'",
+          );
+          await db.execute(
+            "ALTER TABLE profile ADD COLUMN createdAt INTEGER DEFAULT 0",
           );
         }
       },
@@ -110,7 +121,12 @@ class DatabaseHelper {
     final db = await instance.database;
     List<Map<String, dynamic>> mappe = await db.query("profile");
     if (mappe.isEmpty) {
-      Profile base = Profile(totalExp: 0, userName: "Empty");
+      // <-- 4. Costruttore aggiornato per rispettare i parametri required
+      Profile base = Profile(
+        userName: "Utente Novizio",
+        totalExp: 0,
+        createdAt: DateTime.now().millisecondsSinceEpoch,
+      );
       await insertProfile(base);
       return base;
     }

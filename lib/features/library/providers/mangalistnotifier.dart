@@ -28,15 +28,23 @@ class MangaListNotifier extends _$MangaListNotifier {
       currentVolume: manga.currentVolume + 1,
     );
 
+    // 1. Salviamo lo stato precedente per eventuale rollback
+    final statoPrecedente = listaAttuale;
+
+    // 2. Aggiornamento ottimistico (la UI si aggiorna istantaneamente)
+    state = AsyncData([
+      ...listaAttuale.sublist(0, indice),
+      mangaAggiornato,
+      ...listaAttuale.sublist(indice + 1),
+    ]);
+
+    // 3. Tentiamo l'aggiornamento sul DB
     try {
       await _repository.update(mangaAggiornato);
-      state = AsyncData([
-        ...listaAttuale.sublist(0, indice),
-        mangaAggiornato,
-        ...listaAttuale.sublist(indice + 1),
-      ]);
-    } catch (e, st) {
-      state = AsyncError(e, st);
+    } catch (e) {
+      // 4. Rollback in caso di errore e propagazione dell'eccezione
+      state = AsyncData(statoPrecedente);
+      throw Exception("Impossibile aggiornare il capitolo. Riprova.");
     }
   }
 
@@ -50,20 +58,22 @@ class MangaListNotifier extends _$MangaListNotifier {
     final manga = listaAttuale[indice];
     final mangaAggiornato = manga.copyWith(isFavorite: !manga.isFavorite);
 
+    final statoPrecedente = listaAttuale;
+
+    state = AsyncData([
+      ...listaAttuale.sublist(0, indice),
+      mangaAggiornato,
+      ...listaAttuale.sublist(indice + 1),
+    ]);
+
     try {
       await _repository.update(mangaAggiornato);
-      state = AsyncData([
-        ...listaAttuale.sublist(0, indice),
-        mangaAggiornato,
-        ...listaAttuale.sublist(indice + 1),
-      ]);
-    } catch (e, st) {
-      state = AsyncError(e, st);
+    } catch (e) {
+      state = AsyncData(statoPrecedente);
+      throw Exception("Impossibile aggiornare i preferiti.");
     }
   }
 
-  /// Aggiorna il numero totale di volumi di un manga.
-  /// Il nuovo totale non può essere inferiore al volume corrente.
   Future<void> aggiornaTotaleVolumi(String mangaId, int nuovoTotale) async {
     final listaAttuale = state.value;
     if (listaAttuale == null) return;
@@ -76,15 +86,19 @@ class MangaListNotifier extends _$MangaListNotifier {
 
     final mangaAggiornato = manga.copyWith(totalVolume: nuovoTotale);
 
+    final statoPrecedente = listaAttuale;
+
+    state = AsyncData([
+      ...listaAttuale.sublist(0, indice),
+      mangaAggiornato,
+      ...listaAttuale.sublist(indice + 1),
+    ]);
+
     try {
       await _repository.update(mangaAggiornato);
-      state = AsyncData([
-        ...listaAttuale.sublist(0, indice),
-        mangaAggiornato,
-        ...listaAttuale.sublist(indice + 1),
-      ]);
-    } catch (e, st) {
-      state = AsyncError(e, st);
+    } catch (e) {
+      state = AsyncData(statoPrecedente);
+      throw Exception("Impossibile aggiornare il totale dei volumi.");
     }
   }
 

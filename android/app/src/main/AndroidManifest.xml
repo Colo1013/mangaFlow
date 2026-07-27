@@ -1,4 +1,6 @@
 <manifest xmlns:android="http://schemas.android.com/apk/res/android">
+    <!-- Permesso internet per caricare immagini -->
+    <uses-permission android:name="android.permission.INTERNET" />
     <application
         android:label="mangaflow"
         android:name="${applicationName}"

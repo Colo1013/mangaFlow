@@ -1,9 +1,12 @@
 import 'dart:ui';
 
 class Profile {
-  final int totalExp;
+  final String id;
   final String userName;
-  final String id = "1";
+  final int totalExp;
+  final String avatarPath;
+  final int createdAt;
+
   static const Map<int, int> levelMap = {
     1: 0,
     2: 100,
@@ -23,18 +26,24 @@ class Profile {
   };
 
   static const Map<int, Color> levelColors = {
-    1: Color(0xFF9E9E9E), // grigio tenue
-    2: Color(0xFF64B5F6), // azzurro polvere
-    3: Color(0xFF81C784), // verde salvia
-    4: Color(0xFFFFB74D), // arancio caldo
-    5: Color(0xFFBA68C8), // viola
-    6: Color(0xFFE57373), // rosso oro
+    1: Color(0xFF9E9E9E),
+    2: Color(0xFF64B5F6),
+    3: Color(0xFF81C784),
+    4: Color(0xFFFFB74D),
+    5: Color(0xFFBA68C8),
+    6: Color(0xFFE57373),
   };
 
   String get levelName => levelNames[level] ?? "???";
   Color get levelColor => levelColors[level] ?? const Color(0xFF9E9E9E);
 
-  Profile({required this.totalExp, required this.userName, id});
+  Profile({
+    this.id = "1",
+    required this.userName,
+    required this.totalExp,
+    this.avatarPath = 'assets/images/avatars/default.webp', // Default avatar
+    required this.createdAt,
+  });
 
   int get level {
     int out = 0;
@@ -46,24 +55,37 @@ class Profile {
 
   Map<String, dynamic> toMap() {
     return <String, dynamic>{
-      "totalExp": totalExp,
-      "userName": userName,
       "id": id,
+      "userName": userName,
+      "totalExp": totalExp,
+      "avatarPath": avatarPath,
+      "createdAt": createdAt,
     };
   }
 
   factory Profile.fromMap(Map<String, dynamic> map) {
     return Profile(
-      totalExp: map["totalExp"],
-      userName: map["userName"],
-      id: map["id"],
+      id: map["id"] ?? "1",
+      userName: map["userName"] ?? "Utente",
+      totalExp: map["totalExp"] ?? 0,
+      avatarPath: map["avatarPath"] ?? 'assets/images/avatars/default.webp',
+      createdAt: map["createdAt"] ?? DateTime.now().millisecondsSinceEpoch,
     );
   }
 
-  Profile copyWith({int? totalExp, String? userName}) {
+  Profile copyWith({
+    String? id,
+    String? userName,
+    int? totalExp,
+    String? avatarPath,
+    int? createdAt,
+  }) {
     return Profile(
-      totalExp: totalExp ?? this.totalExp,
+      id: id ?? this.id,
       userName: userName ?? this.userName,
+      totalExp: totalExp ?? this.totalExp,
+      avatarPath: avatarPath ?? this.avatarPath,
+      createdAt: createdAt ?? this.createdAt,
     );
   }
 }

@@ -76,10 +76,14 @@ class _MangaDetailSheetState extends ConsumerState<_MangaDetailSheet> {
   }
 
   Future<void> _extractColors() async {
+    await Future.delayed(const Duration(milliseconds: 250));
+    if (!mounted) return;
+
     try {
       final palette = await PaletteGenerator.fromImageProvider(
         CachedNetworkImageProvider(widget.manga.coverUrl),
         maximumColorCount: 16,
+        size: const Size(100, 100),
       );
       if (mounted) {
         setState(() => _palette = palette);
@@ -132,7 +136,8 @@ class _MangaDetailSheetState extends ConsumerState<_MangaDetailSheet> {
 
     return FractionallySizedBox(
       heightFactor: 0.9,
-      child: Container(
+      child: AnimatedContainer(
+        duration: const Duration(milliseconds: 400),
         decoration: BoxDecoration(
           borderRadius: const BorderRadius.vertical(top: Radius.circular(24)),
           gradient: LinearGradient(

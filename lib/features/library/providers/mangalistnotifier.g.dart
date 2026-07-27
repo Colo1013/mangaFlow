@@ -33,7 +33,7 @@ final class MangaListNotifierProvider
   MangaListNotifier create() => MangaListNotifier();
 }
 
-String _$mangaListNotifierHash() => r'f14e5146dfb8edf6642a56232fcc01e38810a5ac';
+String _$mangaListNotifierHash() => r'9a77fe04168c4a5aad536a5e9df5a55c372e3e90';
 
 abstract class _$MangaListNotifier extends $AsyncNotifier<List<Manga>> {
   FutureOr<List<Manga>> build();

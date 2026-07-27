@@ -19,10 +19,11 @@ class ExpPill extends StatelessWidget {
     // Se non esiste un livello successivo, siamo al massimo
     final bool isMaxLevel = expProssimoLivello == null;
 
-    final double progressione = isMaxLevel
+    // CORREZIONE: Aggiunto il "!" a expProssimoLivello per forzare il cast a int
+    final double progressioneTarget = isMaxLevel
         ? 1.0
         : (expAttuali - expLivelloCorrente) /
-              (expProssimoLivello - expLivelloCorrente);
+              (expProssimoLivello! - expLivelloCorrente);
 
     return Center(
       child: ClipRRect(
@@ -37,22 +38,38 @@ class ExpPill extends StatelessWidget {
                 child: Container(color: Colors.white12),
               ),
             ),
-            // Layer 2 — Barra di progressione
+
+            // Layer 2 — Barra di progressione ANIMATA
             Positioned.fill(
               child: Padding(
                 padding: const EdgeInsets.all(2.5),
-                child: FractionallySizedBox(
-                  alignment: Alignment.centerLeft,
-                  widthFactor: progressione.clamp(0.0, 1.0),
-                  child: Container(
-                    decoration: BoxDecoration(
-                      color: profile.levelColor.withValues(alpha: 0.85),
-                      borderRadius: BorderRadius.circular(40),
-                    ),
+                // TweenAnimationBuilder anima il riempimento della barra
+                child: TweenAnimationBuilder<double>(
+                  tween: Tween<double>(
+                    begin: 0.0,
+                    end: progressioneTarget.clamp(0.0, 1.0),
                   ),
+                  duration: const Duration(
+                    seconds: 1,
+                  ), // Durata dell'animazione
+                  curve: Curves.easeOutCubic,
+                  builder: (context, animatedProgress, child) {
+                    return FractionallySizedBox(
+                      alignment: Alignment.centerLeft,
+                      widthFactor: animatedProgress,
+                      heightFactor: 1.0,
+                      child: Container(
+                        decoration: BoxDecoration(
+                          color: profile.levelColor.withValues(alpha: 0.85),
+                          borderRadius: BorderRadius.circular(40),
+                        ),
+                      ),
+                    );
+                  },
                 ),
               ),
             ),
+
             // Layer 3 — Testo
             Padding(
               padding: EdgeInsets.symmetric(

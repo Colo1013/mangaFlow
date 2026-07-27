@@ -42,7 +42,7 @@ final class FocusSessionNotifierProvider
 }
 
 String _$focusSessionNotifierHash() =>
-    r'be74f4f7b42b131298c7865e9273ee1f9fa94925';
+    r'97b124a0d6ccad9f7f97b7d76ac563d70394d310';
 
 abstract class _$FocusSessionNotifier extends $Notifier<StatoSchermo> {
   StatoSchermo build();

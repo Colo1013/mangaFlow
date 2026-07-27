@@ -20,7 +20,17 @@ class FocusRingPainter extends CustomPainter {
   @override
   void paint(Canvas canvas, Size size) {
     final center = Offset(size.width / 2, size.height / 2);
-    final radius = min(size.width, size.height) / 2 - _strokeWidth / 2;
+
+    // Spazio massimo disponibile dal centro fino ai bordi
+    final maxRadius = min(size.width, size.height) / 2;
+
+    // Aggiungiamo 2 pixel di "zona sicura" per evitare che l'anti-aliasing
+    // del cerchio venga tagliato in modo netto sul limite del canvas
+    const safePadding = 2.0;
+
+    // Calcoliamo il raggio principale dell'anello tenendo conto di TUTTO
+    // quello che c'è all'esterno (la distanza dei puntini + lo spessore del puntino stesso + il padding)
+    final radius = maxRadius - _dotOffset - _dotRadius - safePadding;
 
     _drawInactiveArc(canvas, center, radius);
     if (progressione > 0) _drawActiveArc(canvas, center, radius);

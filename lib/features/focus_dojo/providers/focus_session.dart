@@ -5,6 +5,7 @@ import 'package:riverpod_annotation/riverpod_annotation.dart';
 import 'package:sensors_plus/sensors_plus.dart';
 import 'package:proximity_sensor/proximity_sensor.dart';
 import 'dart:async';
+import 'package:flutter/widgets.dart';
 import 'dart:io';
 import 'package:mangaflow/data/models/session.dart';
 
@@ -13,7 +14,7 @@ part 'focus_session.g.dart';
 enum StatoSchermo { idle, attesa, attiva, pausa }
 
 @riverpod
-class FocusSessionNotifier extends _$FocusSessionNotifier {
+class FocusSessionNotifier extends _$FocusSessionNotifier with WidgetsBindingObserver {
   final _profileRepo = ProfileRepository();
   final _sessionRepo = SessionRepository();
 
@@ -28,8 +29,32 @@ class FocusSessionNotifier extends _$FocusSessionNotifier {
   Timer? _timer;
   SessionResult? ultimaSessione;
 
+  // Nuove variabili per tracciare lo stato individuale dei sensori
+  bool _facciaInGiu = false;
+  bool _sensoreVicino = false;
+
   @override
-  StatoSchermo build() => StatoSchermo.idle;
+  StatoSchermo build() {
+    WidgetsBinding.instance.addObserver(this);
+    ref.onDispose(() => WidgetsBinding.instance.removeObserver(this));
+    return StatoSchermo.idle;
+  }
+
+  @override
+  void didChangeAppLifecycleState(AppLifecycleState state) {
+    if (state == AppLifecycleState.resumed) {
+      if (this.state == StatoSchermo.attiva && _durataObiettivo != null && _startTimestamp != null) {
+        final passati = (DateTime.now().millisecondsSinceEpoch - _startTimestamp!) - _tempoAccumulato;
+        if (Duration(milliseconds: passati) >= _durataObiettivo!) {
+          terminaSessione();
+        } else {
+           _tempoRimanente = _durataObiettivo! - Duration(milliseconds: passati);
+           _timer?.cancel();
+           _timer = Timer(_tempoRimanente!, () => terminaSessione());
+        }
+      }
+    }
+  }
 
   void avviaSessione({required String mangaId, Duration? durata}) {
     _mangaId = mangaId;
@@ -94,22 +119,26 @@ class FocusSessionNotifier extends _$FocusSessionNotifier {
     }
     final expFinale = expGuadagnati.floor();
 
-    await _sessionRepo.insert(
-      Session(
-        startTimestamp: _startTimestamp!,
-        endTimestamp: end,
+    try {
+      await _sessionRepo.insert(
+        Session(
+          startTimestamp: _startTimestamp!,
+          endTimestamp: end,
+          mangaId: _mangaId!,
+          expGained: expFinale,
+        ),
+      );
+
+      await _profileRepo.addExp(expFinale);
+
+      ultimaSessione = SessionResult(
+        expGuadagnati: expFinale,
+        durataEffettiva: Duration(milliseconds: durataEffettiva),
         mangaId: _mangaId!,
-        expGained: expFinale,
-      ),
-    );
-
-    await _profileRepo.addExp(expFinale);
-
-    ultimaSessione = SessionResult(
-      expGuadagnati: expFinale,
-      durataEffettiva: Duration(milliseconds: durataEffettiva),
-      mangaId: _mangaId!,
-    );
+      );
+    } catch (e) {
+      debugPrint("Errore durante il salvataggio della sessione nel db: \$e");
+    }
 
     _startTimestamp = null;
     _tempoAccumulato = 0;
@@ -120,30 +149,43 @@ class FocusSessionNotifier extends _$FocusSessionNotifier {
     state = StatoSchermo.idle;
   }
 
+  /// Metodo unico per valutare lo stato combinato dei sensori
+  void _aggiornaStatoDaSensori() {
+    // Basta che uno dei due sensori confermi che il telefono è coperto/girato
+    final bool inFocus = _facciaInGiu || _sensoreVicino;
+
+    if (inFocus) {
+      if (state == StatoSchermo.attesa) {
+        state = StatoSchermo.attiva;
+      } else if (state == StatoSchermo.pausa) {
+        riprendi();
+      }
+    } else {
+      if (state == StatoSchermo.attiva) {
+        mettiInPausa();
+      }
+    }
+  }
+
   void _avviaSensori() {
     if (Platform.isWindows || Platform.isLinux) return;
 
+    // Resetta i valori all'avvio per sicurezza
+    _facciaInGiu = false;
+    _sensoreVicino = false;
+
     _accelerometroSub =
         accelerometerEventStream(
-          samplingPeriod: const Duration(seconds: 5),
+          // Campionamento abbassato a 500ms per una migliore UX
+          samplingPeriod: const Duration(milliseconds: 500),
         ).listen((evento) {
-          final bool facciaInGiu = evento.z < -7.0;
-          if (facciaInGiu && state == StatoSchermo.attesa) {
-            state = StatoSchermo.attiva;
-          } else if (!facciaInGiu && state == StatoSchermo.attiva) {
-            mettiInPausa();
-          } else if (facciaInGiu && state == StatoSchermo.pausa) {
-            riprendi();
-          }
+          _facciaInGiu = evento.z < -7.0;
+          _aggiornaStatoDaSensori();
         });
 
     _proximitySub = ProximitySensor.events.listen((evento) {
-      final bool vicino = evento > 0;
-      if (vicino && state == StatoSchermo.attesa) {
-        state = StatoSchermo.attiva;
-      } else if (!vicino && state == StatoSchermo.attiva) {
-        mettiInPausa();
-      }
+      _sensoreVicino = evento > 0;
+      _aggiornaStatoDaSensori();
     });
   }
 
@@ -174,9 +216,8 @@ class SessionResult {
     required this.durataEffettiva,
   });
 
-  Future<List<Session>> sessionList(Ref ref) async {
-    return await SessionRepository().getAll();
-  }
+  // Nota: ho rimosso sessionList(Ref ref) perché la classe Model
+  // non dovrebbe avere dipendenze da Riverpod.
 
   int calcolaStreak(List<Session> sessioni) {
     if (sessioni.isEmpty) return 0;

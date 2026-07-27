@@ -5,12 +5,14 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:mangaflow/data/models/profile_repository.dart';
 import 'package:mangaflow/features/focus_dojo/providers/focus_session.dart';
 import 'package:mangaflow/features/focus_dojo/providers/profile_notifier.dart';
+import 'package:mangaflow/features/focus_dojo/providers/session_streak.dart';
 import 'package:mangaflow/features/focus_dojo/widgets/exp_pill.dart';
 import 'package:mangaflow/features/focus_dojo/widgets/focus_circle.dart';
 import 'package:mangaflow/features/focus_dojo/widgets/focus_ring_painter.dart';
 import 'package:mangaflow/features/focus_dojo/widgets/manga_selection_sheet.dart';
 import 'package:mangaflow/features/focus_dojo/widgets/pausa_overlay_content.dart';
 import 'package:mangaflow/features/focus_dojo/widgets/ritual_painter.dart';
+import 'package:mangaflow/features/focus_dojo/widgets/session_streak.dart';
 import 'package:mangaflow/features/focus_dojo/widgets/session_summary_card.dart';
 import 'package:mangaflow/features/focus_dojo/widgets/waiting_overlay_content.dart';
 import 'package:mangaflow/features/library/providers/mangalistnotifier.dart';
@@ -46,13 +48,10 @@ class _FocusdojoViewState extends ConsumerState<FocusdojoView>
       vsync: this,
       duration: const Duration(milliseconds: 200),
     );
-    _snapController.addListener(() {
-      // setState necessario: aggiorna _progressione usata dal FocusRingPainter nel body.
-      setState(() {
-        _progressione =
-            _progressioneInizio +
-            (_progressioneTarget - _progressioneInizio) * _snapController.value;
-      });
+    _snapController.addStatusListener((status) {
+      if (status == AnimationStatus.completed) {
+        _progressione = _progressioneTarget;
+      }
     });
 
     _ritualController = AnimationController(
@@ -87,6 +86,7 @@ class _FocusdojoViewState extends ConsumerState<FocusdojoView>
 
   @override
   Widget build(BuildContext context) {
+    final streakMangasAsync = ref.watch(streakMangasProvider);
     // in cima al build, dopo ref.watch(focusSessionProvider)
     final profileAsync = ref.watch(profileProvider);
     final ultimaSessione = ref
@@ -138,46 +138,62 @@ class _FocusdojoViewState extends ConsumerState<FocusdojoView>
                           alignment: Alignment.center,
                           children: [
                             SizedBox.expand(
-                              child: CustomPaint(
-                                painter: FocusRingPainter(
-                                  progressione: _progressione,
-                                  activeColor: colorScheme.primary,
-                                  inactiveColor: colorScheme.onSurface,
-                                ),
+                              child: AnimatedBuilder(
+                                animation: _snapController,
+                                builder: (context, child) {
+                                  final p = _snapController.isAnimating
+                                      ? _progressioneInizio +
+                                            (_progressioneTarget -
+                                                    _progressioneInizio) *
+                                                _snapController.value
+                                      : _progressione;
+                                  return CustomPaint(
+                                    painter: FocusRingPainter(
+                                      progressione: p,
+                                      activeColor: colorScheme.primary,
+                                      inactiveColor: colorScheme.onSurface,
+                                    ),
+                                  );
+                                },
                               ),
                             ),
                             GestureDetector(
                               onTap: _onCentralTap,
                               child: Padding(
                                 padding: const EdgeInsets.all(18),
-                                child: FocusCircle(
-                                  durata: _durataMax * _progressione,
+                                child: AnimatedBuilder(
+                                  animation: _snapController,
+                                  builder: (context, child) {
+                                    final p = _snapController.isAnimating
+                                        ? _progressioneInizio +
+                                              (_progressioneTarget -
+                                                      _progressioneInizio) *
+                                                  _snapController.value
+                                        : _progressione;
+                                    return FocusCircle(durata: _durataMax * p);
+                                  },
                                 ),
                               ),
                             ),
-                            // Terzo figlio dello Stack nel body
-                            AnimatedSlide(
-                              offset: ultimaSessione != null
-                                  ? Offset
-                                        .zero // visibile
-                                  : const Offset(
-                                      0,
-                                      1,
-                                    ), // nascosta sotto lo schermo
-                              duration: const Duration(milliseconds: 400),
-                              curve: Curves.easeOutCubic,
-                              child: Align(
-                                alignment: Alignment.bottomCenter,
-                                child: ultimaSessione != null
-                                    ? _buildSummaryCard(ultimaSessione)
-                                    : const SizedBox.shrink(),
-                              ),
-                            ),
+                            // L'AnimatedSlide con il SummaryCard è stato spostato
+                            // nello Stack principale per evitare problemi di
+                            // overflow dovuti all'AspectRatio.
                           ],
                         ),
                       ),
                     ),
                   ),
+                ),
+                SizedBox(height: 16),
+                streakMangasAsync.when(
+                  data: (mangas) => Padding(
+                    padding: const EdgeInsets.symmetric(horizontal: 16.0),
+                    child: SessionStreakCard(streakMangas: mangas),
+                  ),
+                  loading: () =>
+                      const Center(child: CircularProgressIndicator()),
+                  error: (err, stack) =>
+                      Text('Errore nel caricamento della streak'),
                 ),
               ],
             ),
@@ -195,6 +211,22 @@ class _FocusdojoViewState extends ConsumerState<FocusdojoView>
                 ),
               );
             },
+          ),
+
+          // Summary card posizionata sopra l'intera schermata (fuori da AspectRatio)
+          AnimatedSlide(
+            offset: ultimaSessione != null
+                ? Offset
+                      .zero // visibile
+                : const Offset(0, 1), // nascosta sotto lo schermo
+            duration: const Duration(milliseconds: 400),
+            curve: Curves.easeOutCubic,
+            child: Align(
+              alignment: Alignment.bottomCenter,
+              child: ultimaSessione != null
+                  ? SafeArea(child: _buildSummaryCard(ultimaSessione))
+                  : const SizedBox.shrink(),
+            ),
           ),
         ],
       ),
